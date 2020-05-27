@@ -26,6 +26,7 @@ endif (NOT JSON_HPP_INCLUDE_DIR)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/reed-solomon
     ${CMAKE_CURRENT_SOURCE_DIR}/Testing
     ${JSON_HPP_INCLUDE_DIR}
     ${TURBOFEC_INCLUDE_DIRS})
@@ -49,6 +50,15 @@ POTHOS_MODULE_UTIL(
         Source/LTETurboEncoder.cpp
         Source/Utility.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/ModuleInfo.cpp
+
+        # TODO: CCSDS
+        Source/reed-solomon/ccsds_tab.c
+        Source/reed-solomon/ccsds_tal.c
+        Source/reed-solomon/decode_rs.c
+        #Source/reed-solomon/decode_rs_ccsds.c
+        Source/reed-solomon/encode_rs.c
+        #Source/reed-solomon/encode_rs_ccsds.c
+        Source/reed-solomon/init_rs.c
 
         Testing/TestBitErrorRate.cpp
         Testing/TestConvolution.cpp
