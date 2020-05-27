@@ -4,6 +4,7 @@
 extern "C"
 {
 #include "errnoname.h"
+#include "reed-solomon/rs.h"
 }
 
 #include "Utility.hpp"
@@ -11,6 +12,26 @@ extern "C"
 #include <Pothos/Exception.hpp>
 
 #include <cstring>
+
+ReedSolomonUPtr initRSChar(
+    unsigned int symsize,
+    unsigned int gfpoly,
+    unsigned int fcr,
+    unsigned int prim,
+    unsigned int nroots)
+{
+    return ReedSolomonUPtr(init_rs_char(symsize, gfpoly, fcr, prim, nroots), &free_rs_char);
+}
+
+ReedSolomonUPtr initRSInt(
+    unsigned int symsize,
+    unsigned int gfpoly,
+    unsigned int fcr,
+    unsigned int prim,
+    unsigned int nroots)
+{
+    return ReedSolomonUPtr(init_rs_int(symsize, gfpoly, fcr, prim, nroots), &free_rs_int);
+}
 
 // TODO: move this into PothosCore(?)
 static std::string errnoName(int errCode)

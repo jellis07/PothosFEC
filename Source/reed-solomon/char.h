@@ -4,6 +4,8 @@
  * May be used under the terms of the GNU General Public License (GPL)
  */
 
+#pragma once
+
 #define DTYPE unsigned char
 
 /* Reed-Solomon codec control block */

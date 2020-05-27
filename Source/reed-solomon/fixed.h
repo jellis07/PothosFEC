@@ -5,6 +5,9 @@
  * Copyright 2002 Phil Karn, KA9Q
  * May be used under the terms of the GNU General Public License (GPL)
  */
+
+#pragma once
+
 #define DTYPE unsigned char
 
 static inline int mod255(int x){

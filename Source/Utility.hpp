@@ -3,4 +3,22 @@
 
 #pragma once
 
+#include <memory>
+
+using ReedSolomonUPtr = std::unique_ptr<void, void(*)(void*)>;
+
+ReedSolomonUPtr initRSChar(
+    unsigned int symsize,
+    unsigned int gfpoly,
+    unsigned int fcr,
+    unsigned int prim,
+    unsigned int nroots);
+
+ReedSolomonUPtr initRSInt(
+    unsigned int symsize,
+    unsigned int gfpoly,
+    unsigned int fcr,
+    unsigned int prim,
+    unsigned int nroots);
+
 void throwOnErrCode(int errCode);

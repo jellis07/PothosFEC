@@ -51,14 +51,13 @@ POTHOS_MODULE_UTIL(
         Source/Utility.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/ModuleInfo.cpp
 
-        # TODO: CCSDS
-        Source/reed-solomon/ccsds_tab.c
-        Source/reed-solomon/ccsds_tal.c
-        Source/reed-solomon/decode_rs.c
+        # TODO: CCSDS, needs _8 files
+        #Source/reed-solomon/ccsds_tab.c
+        #Source/reed-solomon/ccsds_tal.c
         #Source/reed-solomon/decode_rs_ccsds.c
-        Source/reed-solomon/encode_rs.c
         #Source/reed-solomon/encode_rs_ccsds.c
-        Source/reed-solomon/init_rs.c
+        Source/reed-solomon/rs_char.c
+        Source/reed-solomon/rs_int.c
 
         Testing/TestBitErrorRate.cpp
         Testing/TestConvolution.cpp

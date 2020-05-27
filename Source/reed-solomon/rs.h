@@ -3,6 +3,8 @@
  * May be used under the terms of the GNU General Public License (GPL)
  */
 
+#pragma once
+
 /* General purpose RS codec, 8-bit symbols */
 void encode_rs_char(void *rs,unsigned char *data,unsigned char *parity);
 int decode_rs_char(void *rs,unsigned char *data,int *eras_pos, int no_eras);

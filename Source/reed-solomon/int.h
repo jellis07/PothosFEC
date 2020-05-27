@@ -3,6 +3,9 @@
  * Copyright 2002, Phil Karn, KA9Q
  * May be used under the terms of the GNU General Public License (GPL)
  */
+
+#pragma once
+
 #define DTYPE int
 
 /* Reed-Solomon codec control block */

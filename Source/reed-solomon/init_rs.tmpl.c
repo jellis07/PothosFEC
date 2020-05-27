@@ -5,14 +5,6 @@
  */
 #include <stdlib.h>
 
-#ifdef CCSDS
-#include "ccsds.h"
-#elif defined(BIGSYM)
-#include "int.h"
-#else
-#include "char.h"
-#endif
-
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
