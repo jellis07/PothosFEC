@@ -30,7 +30,7 @@ class ReedSolomonEncoder: public ReedSolomonCoderBase<T>
             unsigned int fcr,
             unsigned int prim,
             unsigned int nroots
-        ): ReedSolomonCoderBase<T>(dtypeDimension, symSize, gfPoly, fcr, prim, nroots, true /*forwardBuffer*/)
+        ): ReedSolomonCoderBase<T>(dtypeDimension, symSize, gfPoly, fcr, prim, nroots)
         {
         }
 
@@ -39,9 +39,7 @@ class ReedSolomonEncoder: public ReedSolomonCoderBase<T>
         void work() override;
 
     private:
-        std::string _startID;
-
-        bool _prepForData();
+        void _getSingleIterationElems(size_t* pInputElems, size_t* pOutputElems) override;
 };
 
 template <>
@@ -49,37 +47,42 @@ void ReedSolomonEncoder<unsigned char>::work()
 {
     auto elems = this->workInfo().minElements;
     if(0 == elems) return;
+    if(!_prepForData()) return;
+
+    size_t inputIterationElems = 0;
+    size_t outputIterationElems = 0;
+    this->_getSingleIterationElems(
+        &inputIterationElems,
+        &outputIterationElems);
+
+    const auto numInputIterations = elems / inputIterationElems;
+    const auto numOutputIterations = elems / outputIterationElems;
+    const auto singleIterationElems = std::min(numInputIterations, numOutputIterations);
+
+    const auto numIterations = elems / singleIterationElems;
 
     auto input = this->input(0);
     auto output = this->output(0);
-    if(!_prepForData()) return;
 
-    const auto singleIterationElems = this->numElemsSingleIteration();
-    const auto numIterations = elems / singleIterationElems;
+    auto buffIn = input->buffer().as<const unsigned char*>();
+    auto buffOut = output->buffer().as<unsigned char*>();
 
-    auto buff = input->takeBuffer();
-    auto buffPtr = buff.as<unsigned char*>();
-
-    std::vector<Pothos::Label> labels;
+    output->postLabel(this->_startID, Pothos::NullObject(), 0);
 
     for(size_t i = 0; i < numIterations; ++i)
     {
-        std::vector<unsigned char> parity(this->_nroots);
-        encode_rs_char(_rsUPtr.get(), buffPtr, parity.data());
+        std::memcpy(buffOut, buffIn, inputIterationElems);
+        encode_rs_char(
+            _rsUPtr.get(),
+            buffOut,
+            (buffOut + inputIterationElems));
 
-        labels.emplace_back(
-            this->_parityLabelID,
-            std::move(parity),
-            (i*singleIterationElems),
-            singleIterationElems);
+        buffIn += inputIterationElems;
+        buffOut += outputIterationElems;
 
-        buffPtr += singleIterationElems;
+        input->consume(inputIterationElems);
+        output->produce(outputIterationElems);
     }
-
-    input->consume(singleIterationElems * numIterations);
-    output->postBuffer(std::move(buff));
-
-    for(auto& label: labels) output->postLabel(std::move(label));
 }
 
 template <>
@@ -89,68 +92,49 @@ void ReedSolomonEncoder<int>::work()
     if(0 == elems) return;
     if(!_prepForData()) return;
 
-    const auto singleIterationElems = this->numElemsSingleIteration();
+    size_t inputIterationElems = 0;
+    size_t outputIterationElems = 0;
+    this->_getSingleIterationElems(
+        &inputIterationElems,
+        &outputIterationElems);
+
+    const auto numInputIterations = elems / inputIterationElems;
+    const auto numOutputIterations = elems / outputIterationElems;
+    const auto singleIterationElems = std::min(numInputIterations, numOutputIterations);
+
     const auto numIterations = elems / singleIterationElems;
 
     auto input = this->input(0);
     auto output = this->output(0);
 
-    auto buff = input->takeBuffer();
-    auto buffPtr = buff.as<int*>();
+    auto buffIn = input->buffer().as<const int*>();
+    auto buffOut = output->buffer().as<int*>();
 
-    std::vector<Pothos::Label> labels;
+    output->postLabel(this->_startID, Pothos::NullObject(), 0);
 
     for(size_t i = 0; i < numIterations; ++i)
     {
-        std::vector<int> parity(this->_nroots);
-        encode_rs_int(_rsUPtr.get(), buffPtr, parity.data());
+        std::memcpy(buffOut, buffIn, inputIterationElems);
+        encode_rs_int(
+            _rsUPtr.get(),
+            buffOut,
+            (buffOut + inputIterationElems));
 
-        labels.emplace_back(
-            this->_parityLabelID,
-            std::move(parity),
-            (i*singleIterationElems),
-            singleIterationElems);
+        buffIn += inputIterationElems;
+        buffOut += outputIterationElems;
 
-        buffPtr += singleIterationElems;
+        input->consume(inputIterationElems);
+        output->produce(outputIterationElems);
     }
-
-    input->consume(singleIterationElems * numIterations);
-    output->postBuffer(std::move(buff));
-
-    for(auto& label: labels) output->postLabel(std::move(label));
 }
 
 template <typename T>
-bool ReedSolomonEncoder<T>::_prepForData()
+void ReedSolomonEncoder<T>::_getSingleIterationElems(
+    size_t* pInputElems,
+    size_t* pOutputElems)
 {
-    if(_startID.empty()) return true;
-    else
-    {
-        auto input = this->input(0);
-
-        // See if this input has a start ID.
-        auto labels = input->labels();
-
-        auto labelWithIDIter = std::find_if(
-                                   labels.begin(),
-                                   labels.end(),
-                                   [this](const Pothos::Label& label)
-                                   {
-                                       return (label.id == _startID);
-                                   });
-        if(labels.end() != labelWithIDIter)
-        {
-            // Skip all data before the buffer starts.
-            if(0 != labelWithIDIter->index)
-            {
-                input->consume(labelWithIDIter->index);
-                input->setReserve(this->numElemsSingleIteration());
-                return false;
-            }
-            else return true;
-        }
-        else return false;
-    }
+    *pOutputElems = (1U << this->_symSize) - 1;
+    *pInputElems = (*pOutputElems) - this->_nroots;
 }
 
 //

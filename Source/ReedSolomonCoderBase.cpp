@@ -19,8 +19,7 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     unsigned int gfPoly,
     unsigned int fcr,
     unsigned int prim,
-    unsigned int nroots,
-    bool forwardBuffer
+    unsigned int nroots
 ): Pothos::Block(),
    _rsUPtr(nullptr, &dummyFree)
 {
@@ -35,7 +34,7 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     const Pothos::DType dtype(typeid(T), dtypeDimension);
 
     this->setupInput(0, dtype);
-    this->setupOutput(0, dtype, (forwardBuffer ? this->uid() : ""));
+    this->setupOutput(0, dtype);
 
     using Class = ReedSolomonCoderBase<T>;
 
@@ -64,10 +63,10 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     this->registerProbe("numRoots");
     this->registerSignal("numRootsChanged");
 
-    this->registerCall(this, POTHOS_FCN_TUPLE(Class, parityLabelID));
-    this->registerCall(this, POTHOS_FCN_TUPLE(Class, setParityLabelID));
-    this->registerProbe("parityLabelID");
-    this->registerSignal("parityLabelIDChanged");
+    this->registerCall(this, POTHOS_FCN_TUPLE(Class, startID));
+    this->registerCall(this, POTHOS_FCN_TUPLE(Class, setStartID));
+    this->registerProbe("startID");
+    this->registerSignal("startIDChanged");
 }
 
 template <typename T>
@@ -154,17 +153,17 @@ void ReedSolomonCoderBase<T>::setNumRoots(unsigned int nroots)
 }
 
 template <typename T>
-std::string ReedSolomonCoderBase<T>::parityLabelID() const
+std::string ReedSolomonCoderBase<T>::startID() const
 {
-    return _parityLabelID;
+    return _startID;
 }
 
 template <typename T>
-void ReedSolomonCoderBase<T>::setParityLabelID(const std::string& parityLabelID)
+void ReedSolomonCoderBase<T>::setStartID(const std::string& startID)
 {
-    _parityLabelID = parityLabelID;
+    _startID = startID;
 
-    this->emitSignal("parityLabelIDChanged", parityLabelID);
+    this->emitSignal("startIDChanged", startID);
 }
 
 template <typename T>
@@ -228,9 +227,40 @@ void ReedSolomonCoderBase<int>::resetRSUPtr()
 }
 
 template <typename T>
-size_t ReedSolomonCoderBase<T>::numElemsSingleIteration() const
+bool ReedSolomonCoderBase<T>::_prepForData()
 {
-    return (this->_symSize - this->_nroots - 1);
+    if(this->_startID.empty()) return true;
+    else
+    {
+        auto input = this->input(0);
+
+        // See if this input has a start ID.
+        auto labels = input->labels();
+
+        auto labelWithIDIter = std::find_if(
+                                   labels.begin(),
+                                   labels.end(),
+                                   [this](const Pothos::Label& label)
+                                   {
+                                       return (label.id == this->_startID);
+                                   });
+        if(labels.end() != labelWithIDIter)
+        {
+            // Skip all data before the buffer starts.
+            if(0 != labelWithIDIter->index)
+            {
+                size_t inputIterationElems = 0;
+                size_t _ = 0;
+                this->_getSingleIterationElems(&inputIterationElems, &_);
+
+                input->consume(labelWithIDIter->index);
+                input->setReserve(inputIterationElems);
+                return false;
+            }
+            else return true;
+        }
+        else return false;
+    }
 }
 
 //

@@ -23,8 +23,7 @@ class ReedSolomonCoderBase: public Pothos::Block
             unsigned int gfPoly,
             unsigned int fcr,
             unsigned int prim,
-            unsigned int nroots,
-            bool forwardBuffer);
+            unsigned int nroots);
         virtual ~ReedSolomonCoderBase();
 
         unsigned int symbolSize() const;
@@ -42,8 +41,8 @@ class ReedSolomonCoderBase: public Pothos::Block
         unsigned int numRoots() const;
         void setNumRoots(unsigned int nroots);
 
-        std::string parityLabelID() const;
-        void setParityLabelID(const std::string& parityLabelID);
+        std::string startID() const;
+        void setStartID(const std::string& startID);
 
     protected:
         static void validateParameters(
@@ -55,7 +54,8 @@ class ReedSolomonCoderBase: public Pothos::Block
 
         void resetRSUPtr();
 
-        size_t numElemsSingleIteration() const;
+        virtual void _getSingleIterationElems(size_t* pInputElems, size_t* pOutputElems) = 0;
+        bool _prepForData();
 
         static constexpr unsigned int TSizeBits = sizeof(T)*8;
 
@@ -64,7 +64,7 @@ class ReedSolomonCoderBase: public Pothos::Block
         unsigned int _fcr;
         unsigned int _prim;
         unsigned int _nroots;
-        std::string _parityLabelID;
+        std::string _startID;
 
         ReedSolomonUPtr _rsUPtr;
 };
