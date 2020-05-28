@@ -3,7 +3,11 @@
 
 #pragma once
 
+#include "Utility.hpp"
+
 #include <Pothos/Framework.hpp>
+
+#include <string>
 
 //
 // Block class (valid types defined in source file)
@@ -19,7 +23,9 @@ class ReedSolomonCoderBase: public Pothos::Block
             unsigned int gfPoly,
             unsigned int fcr,
             unsigned int prim,
-            unsigned int nroots);
+            unsigned int nroots,
+            bool forwardBuffer);
+        virtual ~ReedSolomonCoderBase();
 
         unsigned int symbolSize() const;
         void setSymbolSize(unsigned int symSize);
@@ -36,6 +42,9 @@ class ReedSolomonCoderBase: public Pothos::Block
         unsigned int numRoots() const;
         void setNumRoots(unsigned int nroots);
 
+        std::string parityLabelID() const;
+        void setParityLabelID(const std::string& parityLabelID);
+
     protected:
         static void validateParameters(
             unsigned int symSize,
@@ -44,6 +53,10 @@ class ReedSolomonCoderBase: public Pothos::Block
             unsigned int prim,
             unsigned int nroots);
 
+        void resetRSUPtr();
+
+        size_t numElemsSingleIteration() const;
+
         static constexpr unsigned int TSizeBits = sizeof(T)*8;
 
         unsigned int _symSize;
@@ -51,4 +64,7 @@ class ReedSolomonCoderBase: public Pothos::Block
         unsigned int _fcr;
         unsigned int _prim;
         unsigned int _nroots;
+        std::string _parityLabelID;
+
+        ReedSolomonUPtr _rsUPtr;
 };

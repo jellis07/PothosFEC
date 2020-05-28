@@ -10,6 +10,8 @@
 
 #include <Pothos/Exception.hpp>
 
+static void dummyFree(void*){}
+
 template <typename T>
 ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     size_t dtypeDimension,
@@ -17,7 +19,10 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     unsigned int gfPoly,
     unsigned int fcr,
     unsigned int prim,
-    unsigned int nroots): Pothos::Block()
+    unsigned int nroots,
+    bool forwardBuffer
+): Pothos::Block(),
+   _rsUPtr(nullptr, &dummyFree)
 {
     validateParameters(symSize, gfPoly, fcr, prim, nroots);
 
@@ -28,8 +33,9 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     _nroots = nroots;
 
     const Pothos::DType dtype(typeid(T), dtypeDimension);
+
     this->setupInput(0, dtype);
-    this->setupOutput(0, dtype);
+    this->setupOutput(0, dtype, (forwardBuffer ? this->uid() : ""));
 
     using Class = ReedSolomonCoderBase<T>;
 
@@ -57,7 +63,15 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     this->registerCall(this, POTHOS_FCN_TUPLE(Class, setNumRoots));
     this->registerProbe("numRoots");
     this->registerSignal("numRootsChanged");
+
+    this->registerCall(this, POTHOS_FCN_TUPLE(Class, parityLabelID));
+    this->registerCall(this, POTHOS_FCN_TUPLE(Class, setParityLabelID));
+    this->registerProbe("parityLabelID");
+    this->registerSignal("parityLabelIDChanged");
 }
+
+template <typename T>
+ReedSolomonCoderBase<T>::~ReedSolomonCoderBase(){}
 
 template <typename T>
 unsigned int ReedSolomonCoderBase<T>::symbolSize() const
@@ -70,6 +84,7 @@ void ReedSolomonCoderBase<T>::setSymbolSize(unsigned int symSize)
 {
     validateParameters(symSize, _gfPoly, _fcr, _prim, _nroots);
     _symSize = symSize;
+    this->resetRSUPtr();
 
     this->emitSignal("symbolSizeChanged", symSize);
 }
@@ -85,6 +100,7 @@ void ReedSolomonCoderBase<T>::setGFPoly(unsigned int gfPoly)
 {
     validateParameters(_symSize, gfPoly, _fcr, _prim, _nroots);
     _gfPoly = gfPoly;
+    this->resetRSUPtr();
 
     this->emitSignal("gfPolyChanged", gfPoly);
 }
@@ -100,6 +116,7 @@ void ReedSolomonCoderBase<T>::setFCR(unsigned int fcr)
 {
     validateParameters(_symSize, _gfPoly, fcr, _prim, _nroots);
     _fcr = fcr;
+    this->resetRSUPtr();
 
     this->emitSignal("fcrChanged", fcr);
 }
@@ -115,6 +132,7 @@ void ReedSolomonCoderBase<T>::setPrimElement(unsigned int prim)
 {
     validateParameters(_symSize, _gfPoly, _fcr, prim, _nroots);
     _prim = prim;
+    this->resetRSUPtr();
 
     this->emitSignal("primElementChanged", prim);
 }
@@ -130,8 +148,23 @@ void ReedSolomonCoderBase<T>::setNumRoots(unsigned int nroots)
 {
     validateParameters(_symSize, _gfPoly, _fcr, _prim, nroots);
     _nroots = nroots;
+    this->resetRSUPtr();
 
     this->emitSignal("numRootsChanged", nroots);
+}
+
+template <typename T>
+std::string ReedSolomonCoderBase<T>::parityLabelID() const
+{
+    return _parityLabelID;
+}
+
+template <typename T>
+void ReedSolomonCoderBase<T>::setParityLabelID(const std::string& parityLabelID)
+{
+    _parityLabelID = parityLabelID;
+
+    this->emitSignal("parityLabelIDChanged", parityLabelID);
 }
 
 template <typename T>
@@ -180,6 +213,24 @@ void ReedSolomonCoderBase<T>::validateParameters(
                       Poco::NumberFormatter::format(nroots),
                       Poco::NumberFormatter::format(numSymbolValues)));
     }
+}
+
+template <>
+void ReedSolomonCoderBase<unsigned char>::resetRSUPtr()
+{
+    _rsUPtr = initRSChar(_symSize, _gfPoly, _fcr, _prim, _nroots);
+}
+
+template <>
+void ReedSolomonCoderBase<int>::resetRSUPtr()
+{
+    _rsUPtr = initRSInt(_symSize, _gfPoly, _fcr, _prim, _nroots);
+}
+
+template <typename T>
+size_t ReedSolomonCoderBase<T>::numElemsSingleIteration() const
+{
+    return (this->_symSize - this->_nroots - 1);
 }
 
 //

@@ -20,7 +20,14 @@ ReedSolomonUPtr initRSChar(
     unsigned int prim,
     unsigned int nroots)
 {
-    return ReedSolomonUPtr(init_rs_char(symsize, gfpoly, fcr, prim, nroots), &free_rs_char);
+    auto ret = ReedSolomonUPtr(init_rs_char(symsize, gfpoly, fcr, prim, nroots), &free_rs_char);
+
+    // init_rs_char returns a null pointer on error but has no actual reporting, so we need to
+    // check for the pointer here. In theory, the Reed-Solomon blocks should prevent any of
+    // these error cases.
+    if(!ret) throw Pothos::RuntimeException("init_rs_char returned null pointer");
+
+    return ret;
 }
 
 ReedSolomonUPtr initRSInt(
@@ -30,7 +37,14 @@ ReedSolomonUPtr initRSInt(
     unsigned int prim,
     unsigned int nroots)
 {
-    return ReedSolomonUPtr(init_rs_int(symsize, gfpoly, fcr, prim, nroots), &free_rs_int);
+    auto ret = ReedSolomonUPtr(init_rs_int(symsize, gfpoly, fcr, prim, nroots), &free_rs_int);
+
+    // init_rs_int returns a null pointer on error but has no actual reporting, so we need to
+    // check for the pointer here. In theory, the Reed-Solomon blocks should prevent any of
+    // these error cases.
+    if(!ret) throw Pothos::RuntimeException("init_rs_int returned null pointer");
+
+    return ret;
 }
 
 // TODO: move this into PothosCore(?)
