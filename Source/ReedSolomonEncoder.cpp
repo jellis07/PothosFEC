@@ -34,23 +34,28 @@ class ReedSolomonEncoder: public ReedSolomonCoderBase<T>
         {
         }
 
+        ~ReedSolomonEncoder(){}
+
         void work() override;
 
-        ~ReedSolomonEncoder(){}
+    private:
+        std::string _startID;
+
+        bool _prepForData();
 };
 
-// TODO: start label?
 template <>
 void ReedSolomonEncoder<unsigned char>::work()
 {
     auto elems = this->workInfo().minElements;
     if(0 == elems) return;
 
-    const auto singleIterationElems = this->numElemsSingleIteration();
-    const auto numIterations = elems / singleIterationElems;
-
     auto input = this->input(0);
     auto output = this->output(0);
+    if(!_prepForData()) return;
+
+    const auto singleIterationElems = this->numElemsSingleIteration();
+    const auto numIterations = elems / singleIterationElems;
 
     auto buff = input->takeBuffer();
     auto buffPtr = buff.as<unsigned char*>();
@@ -77,12 +82,12 @@ void ReedSolomonEncoder<unsigned char>::work()
     for(auto& label: labels) output->postLabel(std::move(label));
 }
 
-// TODO: start label?
 template <>
 void ReedSolomonEncoder<int>::work()
 {
     auto elems = this->workInfo().minElements;
     if(0 == elems) return;
+    if(!_prepForData()) return;
 
     const auto singleIterationElems = this->numElemsSingleIteration();
     const auto numIterations = elems / singleIterationElems;
@@ -113,6 +118,39 @@ void ReedSolomonEncoder<int>::work()
     output->postBuffer(std::move(buff));
 
     for(auto& label: labels) output->postLabel(std::move(label));
+}
+
+template <typename T>
+bool ReedSolomonEncoder<T>::_prepForData()
+{
+    if(_startID.empty()) return true;
+    else
+    {
+        auto input = this->input(0);
+
+        // See if this input has a start ID.
+        auto labels = input->labels();
+
+        auto labelWithIDIter = std::find_if(
+                                   labels.begin(),
+                                   labels.end(),
+                                   [this](const Pothos::Label& label)
+                                   {
+                                       return (label.id == _startID);
+                                   });
+        if(labels.end() != labelWithIDIter)
+        {
+            // Skip all data before the buffer starts.
+            if(0 != labelWithIDIter->index)
+            {
+                input->consume(labelWithIDIter->index);
+                input->setReserve(this->numElemsSingleIteration());
+                return false;
+            }
+            else return true;
+        }
+        else return false;
+    }
 }
 
 //
