@@ -13,6 +13,7 @@
 // Block class (valid types defined in source file)
 //
 
+// TODO: propagateLabels override to ignore start ID
 template <typename T>
 class ReedSolomonCoderBase: public Pothos::Block
 {

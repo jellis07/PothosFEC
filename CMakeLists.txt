@@ -49,6 +49,7 @@ POTHOS_MODULE_UTIL(
         Source/LTETurboDecoder.cpp
         Source/LTETurboEncoder.cpp
         Source/ReedSolomonCoderBase.cpp
+        Source/ReedSolomonDecoder.cpp
         Source/ReedSolomonEncoder.cpp
         Source/Utility.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/ModuleInfo.cpp
