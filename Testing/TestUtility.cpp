@@ -83,7 +83,7 @@ static int uint8_to_err(uint8_t *dst, uint8_t *src, int n)
  * Test-facing functions
  */
 
-Pothos::BufferChunk getRandomInput(size_t numElems)
+Pothos::BufferChunk getRandomInput(size_t numElems, bool asBits)
 {
     Pothos::BufferChunk bufferChunk("uint8", numElems);
 
@@ -91,9 +91,12 @@ Pothos::BufferChunk getRandomInput(size_t numElems)
     randomBuf.readFromDevice(
         bufferChunk,
         numElems);
-    for(size_t elem = 0; elem < numElems; ++elem)
+    if(asBits)
     {
-        bufferChunk.as<std::uint8_t*>()[elem] %= 2;
+        for(size_t elem = 0; elem < numElems; ++elem)
+        {
+            bufferChunk.as<std::uint8_t*>()[elem] %= 2;
+        }
     }
 
     return bufferChunk;
