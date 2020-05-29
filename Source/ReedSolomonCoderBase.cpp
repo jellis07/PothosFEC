@@ -31,6 +31,8 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     _prim = prim;
     _nroots = nroots;
 
+    this->resetRSUPtr();
+
     const Pothos::DType dtype(typeid(T), dtypeDimension);
 
     this->setupInput(0, dtype);
@@ -47,11 +49,6 @@ ReedSolomonCoderBase<T>::ReedSolomonCoderBase(
     this->registerCall(this, POTHOS_FCN_TUPLE(Class, setGFPoly));
     this->registerProbe("gfPoly");
     this->registerSignal("gfPolyChanged");
-
-    this->registerCall(this, POTHOS_FCN_TUPLE(Class, symbolSize));
-    this->registerCall(this, POTHOS_FCN_TUPLE(Class, setSymbolSize));
-    this->registerProbe("symbolSize");
-    this->registerSignal("symbolSizeChanged");
 
     this->registerCall(this, POTHOS_FCN_TUPLE(Class, fcr));
     this->registerCall(this, POTHOS_FCN_TUPLE(Class, setFCR));

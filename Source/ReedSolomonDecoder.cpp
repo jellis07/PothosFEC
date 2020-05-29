@@ -55,14 +55,15 @@ void ReedSolomonDecoder<unsigned char>::work()
         &inputIterationElems,
         &outputIterationElems);
 
-    const auto numInputIterations = elems / inputIterationElems;
-    const auto numOutputIterations = elems / outputIterationElems;
-    const auto singleIterationElems = std::min(numInputIterations, numOutputIterations);
-
-    const auto numIterations = elems / singleIterationElems;
-
     auto input = this->input(0);
     auto output = this->output(0);
+
+    const auto maxInputIterations = input->elements() / inputIterationElems;
+    const auto maxOutputIterations = output->elements() / outputIterationElems;
+    const auto maxIterations = std::min(maxInputIterations, maxOutputIterations);
+
+    const auto idealNumIterations = elems / inputIterationElems;
+    const auto numIterations = std::min(maxIterations, idealNumIterations);
 
     auto buffIn = input->buffer().as<const unsigned char*>();
     auto buffOut = output->buffer().as<unsigned char*>();
@@ -99,9 +100,7 @@ void ReedSolomonDecoder<int>::work()
 
     const auto numInputIterations = elems / inputIterationElems;
     const auto numOutputIterations = elems / outputIterationElems;
-    const auto singleIterationElems = std::min(numInputIterations, numOutputIterations);
-
-    const auto numIterations = elems / singleIterationElems;
+    const auto numIterations = std::min(numInputIterations, numOutputIterations);
 
     auto input = this->input(0);
     auto output = this->output(0);
@@ -114,9 +113,9 @@ void ReedSolomonDecoder<int>::work()
     std::vector<int> intermediate(inputIterationElems);
     for(size_t i = 0; i < numIterations; ++i)
     {
-        std::memcpy(intermediate.data(), buffIn, inputIterationElems);
+        std::memcpy(intermediate.data(), buffIn, inputIterationElems*sizeof(int));
         decode_rs_int(_rsUPtr.get(), intermediate.data(), nullptr, 0);
-        std::memcpy(buffOut, intermediate.data(), outputIterationElems);
+        std::memcpy(buffOut, intermediate.data(), outputIterationElems*sizeof(int));
 
         buffIn += inputIterationElems;
         buffOut += outputIterationElems;

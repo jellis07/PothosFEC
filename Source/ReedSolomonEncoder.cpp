@@ -55,14 +55,15 @@ void ReedSolomonEncoder<unsigned char>::work()
         &inputIterationElems,
         &outputIterationElems);
 
-    const auto numInputIterations = elems / inputIterationElems;
-    const auto numOutputIterations = elems / outputIterationElems;
-    const auto singleIterationElems = std::min(numInputIterations, numOutputIterations);
-
-    const auto numIterations = elems / singleIterationElems;
-
     auto input = this->input(0);
     auto output = this->output(0);
+
+    const auto maxInputIterations = input->elements() / inputIterationElems;
+    const auto maxOutputIterations = output->elements() / outputIterationElems;
+    const auto maxIterations = std::min(maxInputIterations, maxOutputIterations);
+
+    const auto idealNumIterations = elems / inputIterationElems;
+    const auto numIterations = std::min(maxIterations, idealNumIterations);
 
     auto buffIn = input->buffer().as<const unsigned char*>();
     auto buffOut = output->buffer().as<unsigned char*>();
@@ -100,9 +101,7 @@ void ReedSolomonEncoder<int>::work()
 
     const auto numInputIterations = elems / inputIterationElems;
     const auto numOutputIterations = elems / outputIterationElems;
-    const auto singleIterationElems = std::min(numInputIterations, numOutputIterations);
-
-    const auto numIterations = elems / singleIterationElems;
+    const auto numIterations = std::min(numInputIterations, numOutputIterations);
 
     auto input = this->input(0);
     auto output = this->output(0);
@@ -114,7 +113,7 @@ void ReedSolomonEncoder<int>::work()
 
     for(size_t i = 0; i < numIterations; ++i)
     {
-        std::memcpy(buffOut, buffIn, inputIterationElems);
+        std::memcpy(buffOut, buffIn, inputIterationElems*sizeof(int));
         encode_rs_int(
             _rsUPtr.get(),
             buffOut,
