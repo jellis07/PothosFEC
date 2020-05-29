@@ -84,6 +84,7 @@ static void testReedSolomonCoderSymmetry(const TestParams& testParams)
     feederSource.call("feedBuffer", randomInput);
     feederSource.call("feedLabel", Pothos::Label(startID, 0, 0));
 
+    // TODO: add stop ID
     rsEncoder.call("setStartID", startID);
     rsDecoder.call("setStartID", startID);
 
@@ -101,10 +102,10 @@ static void testReedSolomonCoderSymmetry(const TestParams& testParams)
     const auto outputBuffer = collectorSink.call<Pothos::BufferChunk>("getBuffer");
     POTHOS_TEST_EQUAL(numElems, outputBuffer.elements());
 
-    const auto expectedLabel = Pothos::Label(startID, 0, 0);
+    const auto expectedLabel = Pothos::Label(startID, Pothos::NullObject(), 0);
     const auto outputLabels = collectorSink.call<std::vector<Pothos::Label>>("getLabels");
-    //POTHOS_TEST_EQUAL(1, outputLabels.size());
-    //testLabelsEqual(expectedLabel, outputLabels[0]);
+    POTHOS_TEST_EQUAL(1, outputLabels.size());
+    testLabelsEqual(expectedLabel, outputLabels[0]);
 
     // With no noise added between encoding and decoding, the decoded output should be identical
     // to the input.

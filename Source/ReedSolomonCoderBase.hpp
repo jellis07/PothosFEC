@@ -13,7 +13,6 @@
 // Block class (valid types defined in source file)
 //
 
-// TODO: propagateLabels override to ignore start ID
 template <typename T>
 class ReedSolomonCoderBase: public Pothos::Block
 {
@@ -26,6 +25,8 @@ class ReedSolomonCoderBase: public Pothos::Block
             unsigned int prim,
             unsigned int nroots);
         virtual ~ReedSolomonCoderBase();
+
+        void propagateLabels(const Pothos::InputPort* inputPort) override;
 
         unsigned int symbolSize() const;
         void setSymbolSize(unsigned int symSize);

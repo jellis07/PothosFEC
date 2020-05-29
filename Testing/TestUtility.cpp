@@ -107,9 +107,13 @@ Pothos::BufferChunk getRandomInput(size_t numElems, bool asBits)
 void testLabelsEqual(const Pothos::Label& label0, const Pothos::Label& label1)
 {
     POTHOS_TEST_EQUAL(label0.id, label1.id);
+    POTHOS_TEST_TRUE(label0.data.type() == label1.data.type());
 
-    POTHOS_TEST_EQUAL(bool(label0.data), bool(label1.data));
-    if(label0.data) POTHOS_TEST_EQUAL(0, label0.data.compareTo(label1.data));
+    if(label0.data.type() == typeid(bool))
+    {
+        POTHOS_TEST_EQUAL(bool(label0.data), bool(label1.data));
+        if(label0.data) POTHOS_TEST_EQUAL(0, label0.data.compareTo(label1.data));
+    }
 
     POTHOS_TEST_EQUAL(label0.index, label1.index);
     POTHOS_TEST_EQUAL(label0.width, label1.width);

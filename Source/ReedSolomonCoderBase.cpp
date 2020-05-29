@@ -70,6 +70,23 @@ template <typename T>
 ReedSolomonCoderBase<T>::~ReedSolomonCoderBase(){}
 
 template <typename T>
+void ReedSolomonCoderBase<T>::propagateLabels(const Pothos::InputPort* input)
+{
+    if(!_startID.empty())
+    {
+        // Don't propagate input label.
+        for(const auto& label: input->labels())
+        {
+            if(label.id != _startID)
+            {
+                for(auto* output: this->outputs()) output->postLabel(label);
+            }
+        }
+    }
+    else Pothos::Block::propagateLabels(input);
+}
+
+template <typename T>
 unsigned int ReedSolomonCoderBase<T>::symbolSize() const
 {
     return _symSize;

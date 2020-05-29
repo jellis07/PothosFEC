@@ -68,7 +68,7 @@ void ReedSolomonEncoder<unsigned char>::work()
     auto buffIn = input->buffer().as<const unsigned char*>();
     auto buffOut = output->buffer().as<unsigned char*>();
 
-    output->postLabel(this->_startID, Pothos::NullObject(), 0);
+    if(!this->_startID.empty()) output->postLabel(this->_startID, Pothos::NullObject(), 0);
 
     for(size_t i = 0; i < numIterations; ++i)
     {
